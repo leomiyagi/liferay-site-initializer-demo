@@ -1,0 +1,11 @@
+/bundles/
+/build/docker/
+/.idea/
+/.gradle/
+/modules/countries/build/
+/modules/countries-jdk8/build/
+/modules/site-creator/build/
+/modules/site-initializer/build/
+/node_modules/
+/node_modules_cache/
+/build/
