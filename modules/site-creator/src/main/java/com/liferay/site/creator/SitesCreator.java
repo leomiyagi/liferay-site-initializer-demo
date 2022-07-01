@@ -1,5 +1,6 @@
 package com.liferay.site.creator;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -7,13 +8,13 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -22,14 +23,14 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.site.exception.InitializationException;
 import com.liferay.site.initializer.SiteInitializer;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Leonardo Miyagi
@@ -38,7 +39,8 @@ import org.osgi.service.component.annotations.Reference;
 public class SitesCreator {
 
 	@Activate
-	public void activate() {
+	public void activate(BundleContext bundleContext) {
+
 		if (_siteInitializer == null) {
 			_log.info("Site Initializer not registered " + _INITIALIZER_KEY);
 
@@ -96,6 +98,9 @@ public class SitesCreator {
 				true, false, true, serviceContext);
 
 			_initializeSite(site, userId, user, serviceContext);
+
+			_layoutSetLocalService.updateLookAndFeel(
+				site.getGroupId(), false, _THEME_ID, StringPool.BLANK, StringPool.BLANK);
 
 			_log.info("Site " + siteName + " created");
 		}
@@ -161,10 +166,13 @@ public class SitesCreator {
 		PermissionThreadLocal.setPermissionChecker(permissionChecker);
 	}
 
+
 	private static final String _INITIALIZER_KEY =
 		"com.liferay.site.initializer.demo";
 
 	private static final Log _log = LogFactoryUtil.getLog(SitesCreator.class);
+
+	private static final String _THEME_ID = "myliferaytheme_WAR_myliferaytheme";
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
@@ -172,8 +180,8 @@ public class SitesCreator {
 	@Reference
 	private GroupLocalService _groupLocalService;
 
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
-	private ModuleServiceLifecycle _moduleServiceLifecycle;
+	@Reference
+	private LayoutSetLocalService _layoutSetLocalService;
 
 	@Reference(target = "(permission.checker.type=liberal)")
 	private PermissionCheckerFactory _liberalPermissionCheckerFactory;
